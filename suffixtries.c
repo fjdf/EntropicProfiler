@@ -61,6 +61,8 @@ int getCharCode(char c){
 	if(c=='c') return 1;
 	if(c=='g') return 2;
 	if(c=='t') return 3;
+	//if(c=='N') return 4;
+	//if(c=='n') return 4;
 	return -1;
 }
 
@@ -72,6 +74,7 @@ char getCodeChar(unsigned char c){
 	if(((int)c)==1) return 'C';
 	//if(((int)c)==0) return 'A';
 	return 'A';
+	//return 'N';
 }
 
 
@@ -393,7 +396,8 @@ void writeNodeBits(FILE *file, int numbranches, char label, int count){
 	char mode;
 	unsigned char data,tempdata;
 	unsigned int countdata;
-	int i,n,nzeros;
+	int i,n,nzeros,nlabelbits;
+	nlabelbits=logtwo(ALPHABETSIZE-1);
 	mode='N';
 	while(1){
 		if(mode=='c'){
@@ -413,7 +417,7 @@ void writeNodeBits(FILE *file, int numbranches, char label, int count){
 			nzeros=0;
 			countdata=(unsigned int)count;
 			data=(unsigned char)countdata;
-			tempdata =  data & masklast;
+			tempdata = data & masklast;
 			fileiobuffer = fileiobuffer | tempdata;
 			mode='c';
 			if(tempdata==zero) nzeros++;
@@ -434,6 +438,7 @@ void writeNodeBits(FILE *file, int numbranches, char label, int count){
 			if(i==3) mode='L';
 		}
 		else if(mode=='L'){
+			i=1;
 			data=(unsigned char)getCharCode(label);
 			tempdata = data & masklast;
 			fileiobuffer = fileiobuffer | tempdata;
@@ -443,7 +448,8 @@ void writeNodeBits(FILE *file, int numbranches, char label, int count){
 			data = data >> 1;
 			tempdata = data & masklast;
 			fileiobuffer = fileiobuffer | tempdata;
-			mode='C';
+			i++;
+			if(i==nlabelbits) mode='C';
 		}
 		else if(mode=='F'){
 			i=1;
@@ -477,7 +483,8 @@ void readNodeBits(FILE *file, int *numbranches, char *label, int *count){
 	char mode;
 	unsigned char bit,data;
 	unsigned int countdata, intbit;
-	int i,nzeros;
+	int i,nzeros,nlabelbits;
+	nlabelbits=logtwo(ALPHABETSIZE-1);
 	mode='N';
 	i=1;
 	while(1){
@@ -524,6 +531,7 @@ void readNodeBits(FILE *file, int *numbranches, char *label, int *count){
 			}
 		}
 		else if(mode=='L'){
+			i=1;
 			data = zero;
 			data = data | bit;
 			mode='l';
@@ -531,9 +539,12 @@ void readNodeBits(FILE *file, int *numbranches, char *label, int *count){
 		else if(mode=='l'){
 			bit = bit << 1;
 			data = data | bit;
-			(*label)=getCodeChar(data);
-			//printf("(%c)",(*label));
-			mode='C';
+			i++;
+			if(i==nlabelbits){
+				(*label)=getCodeChar(data);
+				//printf("(%c)",(*label));
+				mode='C';
+			}
 		}
 		else if(mode=='F'){
 			break;
@@ -615,7 +626,7 @@ int loadTreeFromFile(char *filename){
 	int depth,*totalbranches,*currentbranch;
 	int nodenumbranches, nodecount;
 	char nodelabel;
-	int n;
+	//int n;
 	treenode *node,**nodeslist;
 	FILE *file;
 	//file=fopen(filename,"r");
@@ -628,7 +639,7 @@ int loadTreeFromFile(char *filename){
 	nodenumbranches=0;
 	nodelabel='X';
 	nodecount=0;
-	n=0;
+	//n=0;
 	//fscanf(file,"%d %c %d\n",&nodenumbranches,&nodelabel,&nodecount);
 	readNodeBits(file,&nodenumbranches,&nodelabel,&nodecount);
 	//printf("%2d: %d %c %d\n",n++,nodenumbranches,nodelabel,nodecount);
@@ -745,6 +756,7 @@ void freeTreeNode(treenode *node){
 // devolve o número total de nós da árvore
 int getNumberOfTreeNodes(treenode *node){
 	return numberofnodes;
+	node=node;
 /*	int num=1;
 	int i=0;
 	int n=node->numbranches;
@@ -757,6 +769,7 @@ int getNumberOfTreeNodes(treenode *node){
 // devolve o tamanho da memória ocupada pela árvore
 int getTreeSize(treenode *node){
 	return numberofnodes*sizeof(treenode);
+	node=node;
 /*	int size=0;
 	int i=0;
 	int n=node->numbranches;

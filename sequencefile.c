@@ -4,7 +4,7 @@
 #include <time.h>
 #include "sequencefile.h"
 
-#define MAXDESCSIZE 80 // tamanho máximo da descrição
+#define MAXDESCSIZE 100 // tamanho máximo da descrição
 #define MAXDATASIZE 5000000 // tamanho máximo da sequência
 
 /************************/
@@ -54,15 +54,16 @@ sequence * loadSequence(char * path){
 		return NULL;
 	desc=NULL;
 	k=0;
-	desc=(char *)malloc(MAXDESCSIZE*sizeof(char));
+	desc=(char *)malloc((MAXDESCSIZE+1)*sizeof(char));
 	if((ch=fgetc(fich))=='>'){
-		while((ch=fgetc(fich))!='\n' && ch!='>' && k<MAXDESCSIZE){
-			desc[k]=ch;
-			k++;
+		while((ch=fgetc(fich))!='\n' && ch!=EOF){
+			if(k<MAXDESCSIZE){
+				desc[k]=ch;
+				k++;
+			}
 		}
 		desc[k]='\0';
-	}
-	else{
+	} else {
 		//desc=(char *)malloc(1*sizeof(char));
 		//desc[0]='\0';
 		strcpy(desc,"Sequence submitted on: ");
@@ -72,9 +73,11 @@ sequence * loadSequence(char * path){
 	}
 	//fgetpos(fich,&pos);
 	startpos=ftell(fich);
+	if(startpos!=0) startpos--;
 	fseek(fich,0L,SEEK_END);
 	endpos=ftell(fich);
 	datasize=(endpos-startpos);
+	if(datasize<=0) return NULL;
 	//fgetpos(fich,&posend);
 	//datasize=(posend-pos);
 	//fsetpos(fich,&pos);
@@ -83,11 +86,15 @@ sequence * loadSequence(char * path){
 	//for(k=0;((ch=fgetc(fich))!=EOF && ch!='>' && ch!='\n' && k<datasize);k++)
 	//	data[k]=ch;
 	k=0;
-	while((ch=fgetc(fich))!=EOF && ch!='>' && ch!='\n' && ch!='\r')
+	while((ch=fgetc(fich))!=EOF && ch!='>'){
 		if(ch=='A' || ch=='C' || ch=='G' || ch=='T' || ch=='a' || ch=='c' || ch=='g' || ch=='t'){
 			data[k]=ch;
 			k++;
+		} else if(ch=='N' || ch=='n'){
+			data[k]='A';
+			k++;
 		}
+	}
 	//k=(long)fread(data,1,datasize,fich);
 	//if(data[k-1]=='\n' || data[k-1]=='>') data[k-1]='\0';
 	data[k]='\0';
@@ -104,7 +111,7 @@ sequence * loadSequence(char * path){
 // mostra os dados da sequência
 void printSequence(sequence *seq){
 	printf("> %s\n",seq->description);
-	printf("> %d\n",seq->size);
+	printf("> %ld\n",seq->size);
 	if((seq->size)<100) printf("> %s\n",seq->data);
 	else printf("> ...\n");
 }

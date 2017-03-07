@@ -266,7 +266,7 @@ int saveBitmap(char *filename){
 	byteswritten+=(int)fwrite(bmp->palette->colors,sizeof(RGBColor),sizeofpalette,file);
 	byteswritten+=(int)fwrite(bmp->data->pixels,sizeof(uint8_t),sizeofdata,file);
 	if(fclose(file)==EOF) return 0;
-	return (byteswritten==(bmp->header->filesize));
+	return (byteswritten==(int)(bmp->header->filesize));
 	freeBitmap();
 }
 
@@ -460,14 +460,14 @@ void compressBitmapData(){
 
 // mostra o tamanho em bytes dos diferentes tipos de dados
 void printTypeSizes(){
-	printf("sizeof(uint8_t) = %d\n",sizeof(uint8_t));
-	printf("sizeof(uint16_t) = %d\n",sizeof(uint16_t));
-	printf("sizeof(uint32_t) = %d\n",sizeof(uint32_t));
-	printf("sizeof(char) = %d\n",sizeof(char));
-	printf("sizeof(short) = %d\n",sizeof(short));
-	printf("sizeof(int) = %d\n",sizeof(int));
-	printf("sizeof(long) = %d\n",sizeof(long));
-	printf("sizeof(double) = %d\n",sizeof(double));
+	printf("sizeof(uint8_t) = %lu\n",sizeof(uint8_t));
+	printf("sizeof(uint16_t) = %lu\n",sizeof(uint16_t));
+	printf("sizeof(uint32_t) = %lu\n",sizeof(uint32_t));
+	printf("sizeof(char) = %lu\n",sizeof(char));
+	printf("sizeof(short) = %lu\n",sizeof(short));
+	printf("sizeof(int) = %lu\n",sizeof(int));
+	printf("sizeof(long) = %lu\n",sizeof(long));
+	printf("sizeof(double) = %lu\n",sizeof(double));
 }
 
 // mostra o conteúdo binário do ficheiro
@@ -483,7 +483,7 @@ int showFileHexData(char *filename){
 	if((file=fopen(filename,"rb"))==NULL) return 0;
 	fprintf(output,"[%s]\n",filename);
 	while(fread(&c,1,1,file)!=0){
-		fprintf(output,"[%.4d][%.4X] %.2X %.3u %.1c\n",bytesread,bytesread,c,c,c);
+		fprintf(output,"[%.4d][%.4X] %.2X %.3u %1c\n",bytesread,bytesread,c,c,c);
 		bytesread++;
 	}
 	fprintf(output,"[%d]\n",bytesread);

@@ -16,7 +16,7 @@
 
 static int **alphabet = NULL; // alfabeto
 static int alphabetsize = 32; // tamanho do alfabeto
-static int digitsize = 30; // tamanho dos caracteres
+//static int digitsize = 30; // tamanho dos caracteres
 static uint8_t black,white,red,green,blue,yellow,purple,cyan,grey; // cores
 static int bmpwidth = 320; // largura da imagem
 static int bmpheight = 240; // altura da imagem
@@ -918,14 +918,18 @@ void drawPlot(double *xlist, double *ylist, int n, int joinpoints, char *xlabel,
 // desenha um gr�ico de barras
 void drawHistogram(double *xlist, double *ylist, int n, int startx) {
 	double dxmin, dymin, dxmax, dymax;
-	int xmin, ymin, xmax, ymax;
-	int xsize, ysize;
+	//int xmin, xmax;
+	int ymin, ymax;
+	//int xsize;
+	int ysize;
 	int xmargin, ymargin;
 	int xaxessize, yaxessize;
 	int xnmarks, ynmarks;
-	int xmarkstart, ymarkstart;
+	//int xmarkstart;
+	int ymarkstart;
 	int xmaxdigits, ymaxdigits;
-	int xstep, ystep;
+	//int xstep;
+	int ystep;
 	int xstartpos, ystartpos;
 	int xendpos, yendpos;
 	int xpoint, ypoint;
@@ -945,9 +949,9 @@ void drawHistogram(double *xlist, double *ylist, int n, int startx) {
 		if(ylist[i]<dymin) dymin=ylist[i];
 	}
 	// converter valores double para int
-	xmin=0; // ALTERADO
+	//xmin=0; // ALTERADO
 	ymin=0; // ALTERADO
-	xmax=n; // ALTERADO
+	//xmax=n; // ALTERADO
 	ymax=double2intup(dymax);
 	// nmero m�imo de digitos
 	xmaxdigits=xymax(digitCount(double2intup(dxmax)),digitCount(double2intup(dxmin))); // ALTERADO
@@ -966,7 +970,7 @@ void drawHistogram(double *xlist, double *ylist, int n, int startx) {
 	xaxessize=bmpwidth-2*xmargin;
 	yaxessize=bmpheight-2*ymargin;
 	// tamanho dos eixos em unidades
-	xsize=n; // ALTERADO
+	//xsize=n; // ALTERADO
 	ysize=ymax-ymin+1;
 	// comprimento em pixels de uma unidade nos eixos
 	xunitsize=((double)xaxessize)/((double)(n)); // ALTERADO
@@ -977,7 +981,7 @@ void drawHistogram(double *xlist, double *ylist, int n, int startx) {
 	drawLine(bmpwidth-xmargin,ymargin,bmpwidth-xmargin,bmpheight-ymargin+1,black); // YY direita
 	drawLine(xmargin,ymargin,bmpwidth-xmargin,ymargin,black); // XX cima
 	// reduzir o nmero de marca�es at�caberem todas nos eixos
-	xstep=1; // espa� em unidades entre as marca�es
+	//xstep=1; // espa� em unidades entre as marca�es
 	ystep=1;
 	xnmarks=n; // nmero de marca�es // ALTERADO
 	ynmarks=ysize;
@@ -991,7 +995,7 @@ void drawHistogram(double *xlist, double *ylist, int n, int startx) {
 	        barlabelstep++;
 	}
 	// desenhar marca�es nos eixos
-	xmarkstart=0; // ALTERADO
+	//xmarkstart=0; // ALTERADO
 	ymarkstart=ymin+negmod(ymin,ystep);
 	number=startx; // ALTERADO
 	for(i=0;i<=xnmarks;i++) { // XX - verticais

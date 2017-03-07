@@ -22,7 +22,7 @@ static int phivalue = 0;
 static int position = 0;
 static int positionwindow = 0;
 
-static double *fvalueslist = NULL;
+//static double *fvalueslist = NULL;
 static double mteta = 0.0;
 static double steta = 0.0;
 
@@ -452,7 +452,7 @@ void slowCalculateMS(){
 // FALTA: fazer free's
 void fastCalculateMS(){
 	int i;
-	int iN=sequencesize;
+	//int iN=sequencesize;
 	int iL=lvalue;
 	int iPhi=phivalue;
 	double N=(double)sequencesize;
@@ -516,7 +516,8 @@ void fastCalculateMS(){
 void progressiveCalculateMS(){
 	int i, j, iL;
 	long double zero, one, two, four;
-	long double L, Phi, N;
+	//long double L;
+	long double Phi, N;
 	long double tempsum;
 	long double middlesum;
 	long double nodecount;
@@ -530,13 +531,13 @@ void progressiveCalculateMS(){
 	int *backcountsvector;
 	treenode *node;
 	treenode **sidelinksvector;
-	iL=(int)10;
+	iL=(int)LIMIT;
 	zero=(long double)0;
 	one=(long double)1;
 	two=(long double)2;
 	four=(long double)4;
-	L=(long double)10;
-	Phi=(long double)10;
+	//L=(long double)LIMIT;
+	Phi=(long double)phivalue;
 	N=(long double)sequencesize;
 	averageslist=(double *)calloc((iL+1),sizeof(double));
 	varianceslist=(double *)calloc((iL+1),sizeof(double));
@@ -581,7 +582,6 @@ void progressiveCalculateMS(){
 		varianceauxvector[i] += ( fourphiknvector[i] * fourphiknvector[i] ) * ( cubiccountsvector[i] );
 		//if(i==lvalue) printf("totalcounts[%d]=%Lf\n",lvalue,depthcounts);
 		//if(i==lvalue) printf("SumFSquared[%d]=%f\n",lvalue,varianceauxvector[i]);
-
 		averageslist[i] = (double) ( averageauxvector[i] / ( N * denominatorsvector[i] ) );
 		varianceslist[i] = (double) ( varianceauxvector[i] / ( denominatorsvector[i] * denominatorsvector[i] ) );
 		//if(i==lvalue) printf("SumFSquared[%d]=%f\n",lvalue,varianceslist[i]);
@@ -853,14 +853,37 @@ int parseIntArg(char **argslist, int argssize, char key){
 // OUTPUT: 9<subseq. de comprimento L na posi�o i> 10<texto ou descri�o da seq. no ficheiro>
 int main(int argc, char *argv[]){
 
-	int n,steps,limit,nbytes,nnodes,findmax;
+	int n,steps,limit,nbytes,nnodes,findmax,valuesonly;
 	char *subsequence, *description;
-	char *treefilename;
+	char *treefilename, *valuesfilename;
 	char *motif;
 	int loadedfromfile;
+	FILE *valuesfile;
 
-	if(argc<8)
-		exitError("Not enough arguments.\nUsage: ep -t<type> -f<file> -l<l> -p<phi> -i<position> -m<findmax> -w<window>");
+	if(argc<8){
+		printf(
+"[Entropic Profiler v1.1]\n\
+\n\
+Error: Not enough arguments.\n\
+\n\
+Usage: ep -t<type> -f<file> -l<l> -p<phi> -i<position> -m<findmax> -w<window>\n\
+\n\
+Options:\n\
+\t- t : sequence type, should always be 'f', which stands for \"file\"\n\
+\t- f : fasta file to load, should be less than 2 GB, only the 1st sequence inside is loaded, 'N's are converted to 'A's\n\
+\t- l : L value (resolution length), should be higher or equal to 3 and less or equal to 10\n\
+\t- p : Phi value (smoothing parameter), should be less or equal to 10\n\
+\t- i : position to study\n\
+\t- m : automatically find the value of L that maximizes the function in that position 'i', should be '0' for false or '1' for true\n\
+\t- w : window length to study around that position 'i'\n\
+\t- x : (optional parameter) load previously saved project (\".tree\" file), should be '0' for false or '1' for true\n\
+\t- y : (optional parameter) study by motif instead of position, should be a string of DNA characters\n\
+\t- z : (optional parameter) get EP values for entire sequence, does not create plots, should be '0' for false or '1' for true\n\
+\n\
+Example: ep -tf -fExample1.fasta -l8 -p10 -i35840 -m0 -w100\n\n"
+		);
+		return (-1);
+	}
 	type=parseCharArg(argv,argc,'t');
 	if(type=='\0') exitError("Invalid sequence type.");
 	/*
@@ -878,22 +901,22 @@ int main(int argc, char *argv[]){
 	if(filename==NULL) exitError("Invalid sequence file name.");
 	//sequencefromfile=(sequence *)malloc(sizeof(sequence));
 	sequencefromfile=loadSequence(filename);
-	if(sequencefromfile==NULL) exitError("Invalid sequence file name.");
+	if(sequencefromfile==NULL) exitError("Invalid sequence file name or size.");
 	sequencetext=sequencefromfile->data;
 	sequencesize=sequencefromfile->size;
 	description=sequencefromfile->description;
 
 	lvalue=parseIntArg(argv,argc,'l');
 	if(sequencesize<lvalue) exitError("Sequence size too small.");
-	//phivalue=parseIntArg(argv,argc,'p');
-	phivalue=10;
+	phivalue=parseIntArg(argv,argc,'p');
+	//phivalue=10;
 	position=parseIntArg(argv,argc,'i');
 	findmax=parseIntArg(argv,argc,'m');
 	positionwindow=parseIntArg(argv,argc,'w');
 	//if(lvalue==0 || phivalue==0 || position==0 || positionwindow==0) exitError("Invalid or missing arguments.");
 
-	if(lvalue<1 || lvalue>10) lvalue=10;
-	if(phivalue<1 || phivalue>10) phivalue=10;
+	if(lvalue<1 || lvalue>LIMIT) lvalue=LIMIT;
+	if(phivalue<1 || phivalue>LIMIT) phivalue=LIMIT;
 	if(position<1) position=1;
 	if(position>sequencesize) position=sequencesize;
 	//if(positionwindow<1) positionwindow=1;
@@ -931,6 +954,7 @@ int main(int argc, char *argv[]){
 	//printf("M[%d]=%f\nS[%d]=%f\n\n",lvalue,averageslist[lvalue],lvalue,varianceslist[lvalue]);
 
 	motif=parseStringArg(argv,argc,'y');
+	valuesonly=parseIntArg(argv,argc,'z');
 	if(motif!=NULL){
 		lvalue=(int)strlen(motif);
 		if(lvalue>10) lvalue=10;
@@ -941,7 +965,27 @@ int main(int argc, char *argv[]){
 		initializePointsListsForMotifStudy();
 		savePointsToFile(0);
 		createLPlot();
-	} else{
+	} else if(valuesonly!=0){
+		printf("Calculating values for entire sequence (%d positions)...\n",sequencesize);
+		n=0;
+		while(filename[n]!='\0') n++;
+		while(n!=0 && filename[n]!='.') n--;
+		if(n==0) n=(int)strlen(filename);
+		valuesfilename=(char *)malloc((n+17)*sizeof(char));
+		sprintf(valuesfilename,"%.*s_(L=%d,P=%d).csv",n,filename,lvalue,phivalue);
+		if((valuesfile=fopen(valuesfilename,"w"))==NULL) exitError("Cannot create values file.");
+		//fputc('#',valuesfile);
+		//for(n=0;n<argc;n++) fprintf(valuesfile," %s",argv[n]);
+		//fputc('\n',valuesfile);
+		fprintf(valuesfile,"position,string,count,EP,p-value,z-score\n");
+		position=(sequencesize/2);
+		positionwindow=(sequencesize+1);
+		initializePointsLists();
+		for(n=0;n<numberofpoints;n++) fprintf(valuesfile,"%.0f,%s,%d,%f,%f,%f\n",xpointslist[n],substringslist[n],countslist[n],ypointslist[n],pvalueslist[n],zscoreslist[n]);
+		fclose(valuesfile);
+		printf("Values saved to '%s'.\n",valuesfilename);
+		free(valuesfilename);
+	} else {
 		if(findmax!=0) findMaxValues();
 		initializePointsLists();
 		savePointsToFile(1);
